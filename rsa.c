@@ -16,7 +16,7 @@
 #include <crypto/rng.h>
 #include <crypto/drbg.h>
 #include <crypto/akcipher.h>
-
+#include "rsa_test.h"
 
 
 
@@ -32,10 +32,29 @@ static int rsa_init(void)
                        0, PTR_ERR(tfm));
           return PTR_ERR(tfm);
     }
-    //req = akcipher_request_alloc(tfm, GFP_KERNEL);
+    req = akcipher_request_alloc(tfm, GFP_KERNEL);
+    if (IS_ERR(req)) {
+	pr_err("rsa: akcipher: Failed to alloc request:%s",PTR_ERR(req));
+	goto free_akcipher;
+    }
 
-    crypto_free_akcipher(tfm);
-    return 0;
+     //set the key
+    err = crypto_akcipher_set_pub_key(tfm, pub_key_der,pub_key_der_len);
+    if(err) {
+	pr_err("set pub key err!");
+    	goto free_req;
+    }
+
+free_all:
+        //kfree(outbuf_dec);
+        //kfree(outbuf_enc);
+free_req:
+        akcipher_request_free(req);
+free_xbuf:
+        //testmgr_free_buf(xbuf);
+free_akcipher:
+    	crypto_free_akcipher(tfm);
+    return err;
 }
 
 static void rsa_exit(void)
