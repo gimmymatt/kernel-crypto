@@ -4,6 +4,10 @@
 extern unsigned char pub_key_der[] ;
 extern unsigned int pub_key_der_len;
 
+extern unsigned char m[] ;
+
+extern unsigned char * pub_key;
+extern unsigned int pub_key_len;
 
 
 
