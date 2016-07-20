@@ -9,9 +9,8 @@ extern unsigned int private_der_len;
 
 extern unsigned char m[] ;
 
-extern unsigned char * pub_key;
-extern unsigned int pub_key_len;
-
+extern unsigned char priveta_en[];
+extern unsigned int priveta_en_len;
 
 
 

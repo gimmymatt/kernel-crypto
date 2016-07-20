@@ -93,7 +93,7 @@ static int rsa_init(void)
     pr_debug("akcipher max output:%x\n", out_len_max);
 
     outbuf_dec = kzalloc(out_len_max, GFP_KERNEL);
-    inbuf_dec  = kzalloc( 6 , GFP_KERNEL);
+    inbuf_dec  = kzalloc( 256 , GFP_KERNEL);
     if (!outbuf_dec || !inbuf_dec)
     	goto free_xbuf;
 
@@ -110,7 +110,7 @@ static int rsa_init(void)
         goto free_all;
     }
     pr_debug("decrypt out:\n");
-    hexdump(outbuf_dec,6);
+    hexdump(outbuf_dec,256);
 free_all:
         kfree(inbuf_dec);
         kfree(outbuf_dec);

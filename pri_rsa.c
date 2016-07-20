@@ -52,7 +52,7 @@ static int rsa_init(void)
 	goto free_akcipher;
     }
 
-     //set the key
+     //set the pub key
     err = crypto_akcipher_set_pub_key(tfm, pub_key_der,pub_key_der_len);
     if(err) {
 
@@ -62,61 +62,61 @@ static int rsa_init(void)
     // alloc buf
     out_len_max = crypto_akcipher_maxsize(tfm);
     pr_debug("akcipher max output:%x\n", out_len_max);
-    outbuf_enc = kzalloc(out_len_max, GFP_KERNEL);
-    inbuf_enc  = kzalloc( 6 , GFP_KERNEL);
-    if (!outbuf_enc || !inbuf_enc)
+    outbuf_dec = kzalloc(out_len_max, GFP_KERNEL);
+    inbuf_dec  = kzalloc( priveta_en_len , GFP_KERNEL);
+    if (!outbuf_dec || !inbuf_dec)
     	goto free_req;
-    memcpy(inbuf_enc, m, 6);
+    memcpy(inbuf_dec, priveta_en, priveta_en_len);
     //
-    sg_init_one(&src, inbuf_enc, 6); 
+    sg_init_one(&src, inbuf_dec, priveta_en_len); 
     pr_debug("inbuf:\n");
-    hexdump(inbuf_enc,6);
-    sg_init_one(&dst, outbuf_enc, out_len_max); 
-    akcipher_request_set_crypt(req, &src, &dst, 6, out_len_max);
+    hexdump(inbuf_dec,priveta_en_len);
+    sg_init_one(&dst, outbuf_dec, out_len_max); 
+    akcipher_request_set_crypt(req, &src, &dst, priveta_en_len, out_len_max);
     //akcipher_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,tcrypt_complete, &result);
 
-    /* Run RSA encrypt - c = m^e mod n;*/
-    err = crypto_akcipher_encrypt(req);
+    /* Run RSA decrypt - c = m^e mod n;*/
+    err = crypto_akcipher_decrypt(req);
     //err = wait_async_op(&result, crypto_akcipher_encrypt(req));
     if (err) {
-        pr_err("alg: rsa: encrypt test failed. err %d\n", err);
+        pr_err("alg: rsa: decrypt test failed. err %d\n", err);
         goto free_xbuf;
     }
     pr_debug("outbuf:\n");
-    hexdump(outbuf_enc,256);
+    hexdump(outbuf_dec,256);
 
-    // decryption
+    // encryption
     err = crypto_akcipher_set_priv_key(tfm, private_der, private_der_len);
     if(err) 
 	goto free_xbuf;
     out_len_max = crypto_akcipher_maxsize(tfm);
     pr_debug("akcipher max output:%x\n", out_len_max);
 
-    outbuf_dec = kzalloc(out_len_max, GFP_KERNEL);
-    inbuf_dec  = kzalloc( 6 , GFP_KERNEL);
-    if (!outbuf_dec || !inbuf_dec)
+    outbuf_enc = kzalloc(out_len_max, GFP_KERNEL);
+    inbuf_enc  = kzalloc( 6 , GFP_KERNEL);
+    if (!outbuf_enc || !inbuf_enc)
     	goto free_xbuf;
 
-    sg_init_one(&src, inbuf_dec, 256); 
-    memcpy(inbuf_dec,outbuf_enc,256);
-    pr_debug("decrypt in:\n");
-    hexdump(inbuf_dec, 256);
+    sg_init_one(&src, inbuf_enc, 6); 
+    memcpy(inbuf_dec,outbuf_enc,6);
+    pr_debug("encrypt in:\n");
+    hexdump(inbuf_enc, 6);
 
-    sg_init_one(&dst, outbuf_dec, 256); 
-    akcipher_request_set_crypt(req, &src, &dst, 256, 256);
-    err = crypto_akcipher_decrypt(req);
+    sg_init_one(&dst, outbuf_enc, 256); 
+    akcipher_request_set_crypt(req, &src, &dst, 6, 256);
+    err = crypto_akcipher_encrypt(req);
     if (err) {
-    	pr_err("alg: rsa: decrypt test failed. err %d\n", err);
+    	pr_err("alg: rsa: encrypt test failed. err %d\n", err);
         goto free_all;
     }
-    pr_debug("decrypt out:\n");
-    hexdump(outbuf_dec,6);
+    pr_debug("crypt out:\n");
+    hexdump(outbuf_enc,6);
 free_all:
-        kfree(inbuf_dec);
-        kfree(outbuf_dec);
-free_xbuf:
         kfree(inbuf_enc);
         kfree(outbuf_enc);
+free_xbuf:
+        kfree(inbuf_dec);
+        kfree(outbuf_dec);
 free_req:
         akcipher_request_free(req);
 free_akcipher:
