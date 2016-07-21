@@ -1,5 +1,5 @@
 /** test rsa API function
-*
+* sign&verify
 *
 */
 
@@ -77,6 +77,7 @@ static int rsa_init(void)
 
     /* Run RSA decrypt - c = m^e mod n;*/
     //err = crypto_akcipher_decrypt(req);
+    err = crypto_akcipher_verify(req);
     if (err) {
         pr_err("alg: rsa: decrypt test failed. err %d\n", err);
         goto free_xbuf;
@@ -84,7 +85,7 @@ static int rsa_init(void)
     pr_debug("outbuf:\n");
     hexdump(outbuf_dec,256);
 
-    // encryption
+    // encryption : sign
     err = crypto_akcipher_set_priv_key(tfm, private_der, private_der_len);
     if(err) 
 	goto free_xbuf;
@@ -103,7 +104,8 @@ static int rsa_init(void)
 
     sg_init_one(&dst, outbuf_enc, 256); 
     akcipher_request_set_crypt(req, &src, &dst, 6, 256);
-    err = crypto_akcipher_encrypt(req);
+    //err = crypto_akcipher_encrypt(req);
+    err = crypto_akcipher_sign(req);
     if (err) {
     	pr_err("alg: rsa: encrypt test failed. err %d\n", err);
         goto free_all;
