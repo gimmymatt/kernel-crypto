@@ -76,8 +76,7 @@ static int rsa_init(void)
     //akcipher_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,tcrypt_complete, &result);
 
     /* Run RSA decrypt - c = m^e mod n;*/
-    err = crypto_akcipher_decrypt(req);
-    //err = wait_async_op(&result, crypto_akcipher_encrypt(req));
+    //err = crypto_akcipher_decrypt(req);
     if (err) {
         pr_err("alg: rsa: decrypt test failed. err %d\n", err);
         goto free_xbuf;
@@ -98,7 +97,7 @@ static int rsa_init(void)
     	goto free_xbuf;
 
     sg_init_one(&src, inbuf_enc, 6); 
-    memcpy(inbuf_dec,outbuf_enc,6);
+    memcpy(inbuf_enc,m,6);
     pr_debug("encrypt in:\n");
     hexdump(inbuf_enc, 6);
 
@@ -110,7 +109,7 @@ static int rsa_init(void)
         goto free_all;
     }
     pr_debug("crypt out:\n");
-    hexdump(outbuf_enc,6);
+    hexdump(outbuf_enc,256);
 free_all:
         kfree(inbuf_enc);
         kfree(outbuf_enc);
