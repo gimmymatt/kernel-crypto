@@ -17,6 +17,7 @@
 #include <crypto/rng.h>
 #include <crypto/drbg.h>
 #include <crypto/akcipher.h>
+#include <linux/base64.h>
 #include "rsa_test.h"
 
 static void hexdump(unsigned char *buf, unsigned int len)
@@ -25,6 +26,7 @@ static void hexdump(unsigned char *buf, unsigned int len)
                         16, 1,
                         buf, len, false);
 }
+
 
 static int rsa_init(void)
 
