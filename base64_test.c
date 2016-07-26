@@ -12,6 +12,7 @@
 #include <crypto/rng.h>
 #include <crypto/drbg.h>
 #include <crypto/akcipher.h>
+#include <net/rtnetlink.h>
 #include <linux/base64.h>
 #include "rsa_test.h"
 
@@ -33,6 +34,16 @@ static int base64_init(void)
     void *outbuf_dec = NULL;
     struct scatterlist src, dst;
     unsigned int out_len_max, out_len = 0;
+    struct crypto_template *rsapkcs1;
+    struct rtattr *tb[3];
+    struct {
+                struct rtattr attr;
+                struct crypto_attr_type data;
+        } ptype;
+    struct {
+                struct rtattr attr;
+                struct crypto_attr_alg data;
+        } palg, phash;
 
     unbase64 = base64_decode(__4823DB8A2FD3_b3000013c7b63801_bin, __4823DB8A2FD3_b3000013c7b63801_bin_len, &unbase64_len);
     if ( unbase64 == NULL ) {
@@ -42,7 +53,35 @@ static int base64_init(void)
    hexdump(unbase64, unbase64_len);
 
    // decrypt
-    tfm = crypto_alloc_akcipher("rsa", 0, 0);
+    //tfm = crypto_alloc_akcipher("rsa", 0, 0);
+#if 0
+    pr_debug("look up for pkcs1pad\n");
+    rsapkcs1 = crypto_lookup_template("pkcs1pad");
+    if ( !rsapkcs1 ) {
+	pr_err("base64: can`t find rsa-pkcs1pad template\n");
+    }
+    ptype.attr.rta_len = sizeof(ptype);
+    ptype.attr.rta_type = CRYPTOA_TYPE;
+    ptype.data.type = CRYPTO_ALG_TYPE_AKCIPHER;
+    ptype.data.mask = CRYPTO_ALG_TYPE_AKCIPHER;
+    tb[0] = &ptype.attr; 
+
+    palg.attr.rta_len = sizeof(palg);
+    palg.attr.rta_type = CRYPTOA_ALG;
+    /* Must use the exact name to locate ourselves. */
+    memcpy(palg.data.name, "rsa", CRYPTO_MAX_ALG_NAME);
+    tb[1] = &palg.attr;
+
+    phash.attr.rta_len = sizeof(phash);
+    phash.attr.rta_type = CRYPTOA_ALG;
+    /* Must use the exact name to locate ourselves. */
+    //memcpy(phash.data.name, , CRYPTO_MAX_ALG_NAME);
+    memset(phash.data.name, 0, CRYPTO_MAX_ALG_NAME);
+    tb[2] = &phash.attr;
+    err = rsapkcs1->create(rsapkcs1, tb);
+#endif
+
+    tfm = crypto_alloc_akcipher("pkcs1pad(rsa)", 0, 0);
     if (IS_ERR(tfm)) {
           pr_err("alg: akcipher: Failed to load tfm for %s: %ld\n",
                        0, PTR_ERR(tfm));
